@@ -32,6 +32,21 @@
     .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
     .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
 
+    /* ★更新ボタン (ヘッダー右) */
+    .update-btn {
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .update-btn:active { opacity: 0.8; }
+    .update-btn:disabled { background: #555; color: #aaa; }
+
     /* Area Tabs */
     .area-tabs {
       display: flex; gap: 10px;
@@ -156,8 +171,6 @@
       color: #fff;
       margin-bottom: 6px; line-height: 1.4;
     }
-    
-    /* 文字サイズをステーション名と同じ15pxに変更 */
     .car-info {
       font-size: 15px;
       color: #aaa;
@@ -175,6 +188,17 @@
     .time-val { color: #fff; font-weight: bold; font-size: 14px; }
     
     .error-text { color: #ff3399; font-weight: bold; }
+    
+    /* トースト通知 */
+    #toast {
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+      background: rgba(0, 153, 255, 0.9); color: white;
+      padding: 10px 20px; border-radius: 30px;
+      font-size: 12px; font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      z-index: 200; white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -182,7 +206,9 @@
   <div class="header">
     <div class="header-top">
       <div class="logo">JKS <span class="badge" id="area-badge">FIELD</span></div>
-      <div style="font-size:12px; color:#666;">v2.1</div>
+      <button class="update-btn" id="update-btn" onclick="triggerUpdate()">
+        ↻ データ更新
+      </button>
     </div>
     <div class="area-tabs">
       <button class="tab-btn" data-area="tama" onclick="switchArea('tama')">多摩</button>
@@ -202,14 +228,16 @@
     </div>
   </div>
 
+  <div id="toast">更新を開始しました</div>
+
   <script>
-    // いただいたURLを設定済み
+    // URL設定済み
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
     
     let currentArea = 'tama'; 
 
     window.onload = function() {
-      // 1. URLの記憶: localStorageはGitHubのドメイン配下なら永続化されます
+      // 1. URLの記憶
       const savedArea = localStorage.getItem('jks_area_mode');
       if (savedArea && (savedArea === 'tama' || savedArea === 'kanagawa')) {
         switchArea(savedArea);
@@ -239,6 +267,49 @@
       }
       document.getElementById('area-badge').textContent = (area === 'tama') ? 'TAMA' : 'KNGW';
       localStorage.setItem('jks_area_mode', area);
+    }
+
+    // ★更新機能トリガー
+    function triggerUpdate() {
+      const btn = document.getElementById('update-btn');
+      
+      // 確認ダイアログ
+      const areaLabel = (currentArea === 'tama') ? "多摩エリア" : "神奈川エリア";
+      if (!confirm(`【${areaLabel}】のデータ更新を開始しますか？`)) return;
+
+      btn.disabled = true;
+      btn.textContent = "送信中...";
+      
+      // action=update で更新モードを呼び出し
+      const targetUrl = `${GAS_API_URL}?action=update&area=${currentArea}`;
+
+      fetch(targetUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.result === "OK") {
+            showToast(`✅ ${areaLabel}の更新を開始`);
+          } else {
+            showToast(`⚠️ エラー: ${data.error || "不明"}`);
+          }
+          resetUpdateBtn();
+        })
+        .catch(err => {
+          showToast("❌ 通信エラー");
+          resetUpdateBtn();
+        });
+    }
+
+    function resetUpdateBtn() {
+      const btn = document.getElementById('update-btn');
+      btn.textContent = "↻ データ更新";
+      btn.disabled = false;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = "1";
+      setTimeout(() => { t.style.opacity = "0"; }, 3000);
     }
 
     function startScan() {
@@ -273,7 +344,7 @@
           msg.textContent = `API照会中...`;
 
           // APIへのアクセス (fetch)
-          const targetUrl = `${GAS_API_URL}?lat=${lat}&lng=${lng}&area=${currentArea}`;
+          const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
 
           fetch(targetUrl)
             .then(response => response.json())
