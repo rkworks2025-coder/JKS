@@ -156,10 +156,13 @@
       color: #fff;
       margin-bottom: 6px; line-height: 1.4;
     }
+    
+    /* 文字サイズをステーション名と同じ15pxに変更 */
     .car-info {
-      font-size: 13px;
+      font-size: 15px;
       color: #aaa;
       display: flex; gap: 10px; margin-bottom: 12px;
+      align-items: baseline;
     }
     .plate { color: #ddd; font-weight: bold; }
 
@@ -200,7 +203,7 @@
   </div>
 
   <script>
-    // URL設定済み
+    // いただいたURLを設定済み
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
     
     let currentArea = 'tama'; 
