@@ -26,26 +26,42 @@
       border-bottom: 1px solid #333;
     }
     .header-top {
-      display: flex; justify-content: space-between; align-items: center;
+      display: flex; justify-content: space-between; align-items: flex-start; /* 上揃えに変更 */
       margin-bottom: 10px;
     }
-    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 4px; }
     .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
 
-    /* ★更新ボタン (ヘッダー右) */
+    /* ★更新ボタンエリア（ボタン＋時刻） */
+    .update-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
     .update-btn {
       background: #e63946;
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 5px 10px;
+      padding: 6px 12px;
       font-size: 11px;
       font-weight: bold;
       cursor: pointer;
       display: flex; align-items: center; gap: 4px;
+      transition: background 0.3s;
     }
     .update-btn:active { opacity: 0.8; }
-    .update-btn:disabled { background: #555; color: #aaa; }
+    .update-btn:disabled { background: #555; color: #aaa; cursor: wait; }
+    
+    /* 最終更新時刻のスタイル */
+    #last-update-time {
+      font-size: 10px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: bold;
+      height: 12px; /* 高さを確保してガタつき防止 */
+    }
 
     /* Area Tabs */
     .area-tabs {
@@ -69,7 +85,6 @@
       color: #fff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
-    /* エリア別カラー */
     .tab-btn.active[data-area="tama"] { border-bottom: 2px solid #00bfff; color: #00bfff; }
     .tab-btn.active[data-area="kanagawa"] { border-bottom: 2px solid #ff9900; color: #ff9900; }
 
@@ -206,9 +221,12 @@
   <div class="header">
     <div class="header-top">
       <div class="logo">JKS <span class="badge" id="area-badge">FIELD</span></div>
-      <button class="update-btn" id="update-btn" onclick="triggerUpdate()">
-        ↻ データ更新
-      </button>
+      <div class="update-wrapper">
+        <button class="update-btn" id="update-btn" onclick="triggerUpdate()">
+          ↻ データ更新
+        </button>
+        <div id="last-update-time"></div>
+      </div>
     </div>
     <div class="area-tabs">
       <button class="tab-btn" data-area="tama" onclick="switchArea('tama')">多摩</button>
@@ -235,6 +253,8 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
     
     let currentArea = 'tama'; 
+    let pollInterval = null;
+    let updateClickTime = 0;
 
     window.onload = function() {
       // 1. URLの記憶
@@ -272,26 +292,31 @@
     // ★更新機能トリガー
     function triggerUpdate() {
       const btn = document.getElementById('update-btn');
+      const timeLabel = document.getElementById('last-update-time');
       
-      // 確認ダイアログ
       const areaLabel = (currentArea === 'tama') ? "多摩エリア" : "神奈川エリア";
       if (!confirm(`【${areaLabel}】のデータ更新を開始しますか？`)) return;
 
       btn.disabled = true;
-      btn.textContent = "送信中...";
+      btn.textContent = "更新確認中...";
+      timeLabel.textContent = "Python起動中...";
       
-      // action=update で更新モードを呼び出し
+      updateClickTime = Date.now(); // ボタンを押した時刻を記録
+
       const targetUrl = `${GAS_API_URL}?action=update&area=${currentArea}`;
 
       fetch(targetUrl)
         .then(response => response.json())
         .then(data => {
           if (data.result === "OK") {
-            showToast(`✅ ${areaLabel}の更新を開始`);
+            showToast(`✅ ${areaLabel} 更新開始`);
+            // ポーリング開始（30秒おき）
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(checkStatus, 30000); 
           } else {
             showToast(`⚠️ エラー: ${data.error || "不明"}`);
+            resetUpdateBtn();
           }
-          resetUpdateBtn();
         })
         .catch(err => {
           showToast("❌ 通信エラー");
@@ -299,10 +324,53 @@
         });
     }
 
-    function resetUpdateBtn() {
+    // ★更新完了チェック（ポーリング）
+    function checkStatus() {
+      const targetUrl = `${GAS_API_URL}?action=status`;
+      
+      fetch(targetUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.result === "OK" && data.timestamp) {
+            const serverTime = parseInt(data.timestamp);
+            // サーバーのファイルの更新時刻が、ボタンを押した時刻より新しければ完了とみなす
+            if (serverTime > updateClickTime) {
+              finishUpdate(serverTime);
+            }
+          }
+        })
+        .catch(err => console.log("Status check failed"));
+    }
+
+    function finishUpdate(timestamp) {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = null;
+
       const btn = document.getElementById('update-btn');
+      const timeLabel = document.getElementById('last-update-time');
+      
+      const date = new Date(timestamp);
+      const h = String(date.getHours()).padStart(2, '0');
+      const m = String(date.getMinutes()).padStart(2, '0');
+
       btn.textContent = "↻ データ更新";
       btn.disabled = false;
+      timeLabel.textContent = `✅ 最終更新 ${h}:${m}`;
+      timeLabel.style.color = "#00bfff";
+
+      showToast("✅ データ更新が完了しました");
+      
+      // 自動でリスト更新（スキャン）
+      startScan();
+    }
+
+    function resetUpdateBtn() {
+      const btn = document.getElementById('update-btn');
+      const timeLabel = document.getElementById('last-update-time');
+      btn.textContent = "↻ データ更新";
+      btn.disabled = false;
+      timeLabel.textContent = "";
+      if (pollInterval) clearInterval(pollInterval);
     }
 
     function showToast(msg) {
