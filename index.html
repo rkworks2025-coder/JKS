@@ -21,18 +21,18 @@
     .header {
       background: rgba(20, 20, 20, 0.95);
       backdrop-filter: blur(10px);
-      padding: 10px 15px;
+      padding: 12px 15px; /* ボタンが大きくなるので少し広げました */
       position: sticky; top: 0; z-index: 100;
       border-bottom: 1px solid #333;
     }
     .header-top {
-      display: flex; justify-content: space-between; align-items: flex-start; /* 上揃えに変更 */
-      margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 12px;
     }
-    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 4px; }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 6px; }
     .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
 
-    /* ★更新ボタンエリア（ボタン＋時刻） */
+    /* ★更新ボタンエリア（デザイン調整） */
     .update-wrapper {
       display: flex;
       flex-direction: column;
@@ -43,24 +43,26 @@
       background: #e63946;
       color: #fff;
       border: none;
-      border-radius: 4px;
-      padding: 6px 12px;
-      font-size: 11px;
+      border-radius: 6px;
+      /* サイズアップ */
+      padding: 8px 16px; 
+      font-size: 13px; 
       font-weight: bold;
       cursor: pointer;
-      display: flex; align-items: center; gap: 4px;
+      display: flex; align-items: center; gap: 5px;
       transition: background 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
-    .update-btn:active { opacity: 0.8; }
-    .update-btn:disabled { background: #555; color: #aaa; cursor: wait; }
+    .update-btn:active { opacity: 0.8; transform: translateY(1px); }
+    .update-btn:disabled { background: #555; color: #aaa; cursor: wait; transform: none; box-shadow: none;}
     
-    /* 最終更新時刻のスタイル */
+    /* 最終更新時刻のスタイル（サイズアップ） */
     #last-update-time {
-      font-size: 10px;
-      color: #888;
-      margin-top: 4px;
+      font-size: 12px; /* +2px */
+      color: #aaa; /* 少し明るく */
+      margin-top: 5px;
       font-weight: bold;
-      height: 12px; /* 高さを確保してガタつき防止 */
+      height: 14px; 
     }
 
     /* Area Tabs */
