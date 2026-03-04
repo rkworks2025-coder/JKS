@@ -21,16 +21,19 @@
     .header {
       background: rgba(20, 20, 20, 0.95);
       backdrop-filter: blur(10px);
-      padding: 12px 15px; /* ボタンが大きくなるので少し広げました */
+      padding: 12px 15px;
       position: sticky; top: 0; z-index: 100;
       border-bottom: 1px solid #333;
     }
     .header-top {
-      display: flex; justify-content: space-between; align-items: flex-start;
+      display: flex; justify-content: space-between;
+      align-items: flex-start;
       margin-bottom: 12px;
     }
-    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 6px; }
-    .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 6px;
+    }
+    .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle;
+    margin-left: 5px; }
 
     /* ★更新ボタンエリア（デザイン調整） */
     .update-wrapper {
@@ -44,7 +47,6 @@
       color: #fff;
       border: none;
       border-radius: 6px;
-      /* サイズアップ */
       padding: 8px 16px; 
       font-size: 13px; 
       font-weight: bold;
@@ -54,12 +56,13 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .update-btn:active { opacity: 0.8; transform: translateY(1px); }
-    .update-btn:disabled { background: #555; color: #aaa; cursor: wait; transform: none; box-shadow: none;}
+    .update-btn:disabled { background: #555; color: #aaa;
+    cursor: wait; transform: none; box-shadow: none;}
     
     /* 最終更新時刻のスタイル（サイズアップ） */
     #last-update-time {
-      font-size: 12px; /* +2px */
-      color: #aaa; /* 少し明るく */
+      font-size: 12px;
+      color: #aaa;
       margin-top: 5px;
       font-weight: bold;
       height: 14px; 
@@ -67,7 +70,8 @@
 
     /* Area Tabs */
     .area-tabs {
-      display: flex; gap: 10px;
+      display: flex;
+      gap: 10px;
       background: #111;
       padding: 4px; border-radius: 8px;
     }
@@ -87,8 +91,10 @@
       color: #fff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
-    .tab-btn.active[data-area="tama"] { border-bottom: 2px solid #00bfff; color: #00bfff; }
-    .tab-btn.active[data-area="kanagawa"] { border-bottom: 2px solid #ff9900; color: #ff9900; }
+    .tab-btn.active[data-area="tama"] { border-bottom: 2px solid #00bfff; color: #00bfff;
+    }
+    .tab-btn.active[data-area="kanagawa"] { border-bottom: 2px solid #ff9900; color: #ff9900;
+    }
 
     /* Scan Area */
     .scan-area {
@@ -108,17 +114,23 @@
       -webkit-tap-highlight-color: transparent;
       transition: transform 0.1s, background 0.3s;
     }
-    #scan-btn.ready-tama { background: linear-gradient(135deg, #00bfff, #0077ff); box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4); }
-    #scan-btn.ready-kanagawa { background: linear-gradient(135deg, #ff9900, #ff5500); box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4); }
+    #scan-btn.ready-tama { background: linear-gradient(135deg, #00bfff, #0077ff); box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4);
+    }
+    #scan-btn.ready-kanagawa { background: linear-gradient(135deg, #ff9900, #ff5500); box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
+    }
     
-    #scan-btn:active { transform: scale(0.96); }
+    #scan-btn:active { transform: scale(0.96);
+    }
     
-    #status-msg { margin-top: 10px; font-size: 12px; color: #666; height: 1.2em; }
+    #status-msg { margin-top: 10px; font-size: 12px; color: #666; height: 1.2em;
+    }
 
     /* List Area */
-    .list-container { padding: 15px; max-width: 600px; margin: 0 auto; }
+    .list-container { padding: 15px; max-width: 600px; margin: 0 auto;
+    }
     
-    .empty-state { text-align: center; color: #444; margin-top: 50px; font-size: 14px; }
+    .empty-state { text-align: center; color: #444; margin-top: 50px; font-size: 14px;
+    }
 
     /* Alert Box */
     .missing-alert {
@@ -132,7 +144,8 @@
       display: none; 
       line-height: 1.5;
     }
-    .missing-title { font-weight: bold; color: #ff6666; margin-bottom: 4px; }
+    .missing-title { font-weight: bold; color: #ff6666; margin-bottom: 4px;
+    }
 
     /* Card Design */
     .card {
@@ -143,7 +156,8 @@
       overflow: hidden;
       animation: fadeIn 0.3s ease-out;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0);
+    } }
 
     .card-header {
       background: #252525;
@@ -158,7 +172,17 @@
       font-size: 16px; color: #fff;
       display: flex; align-items: center; gap: 5px;
     }
-    .dist-unit { font-size: 12px; color: #888; font-weight: normal; }
+    .dist-unit { font-size: 12px; color: #888;
+    font-weight: normal; }
+
+    /* 追加：所要時間バッジ */
+    .duration-badge {
+      font-weight: bold;
+      font-size: 16px;
+      display: flex; align-items: center; gap: 3px;
+      margin-left: 10px;
+    }
+    .time-unit { font-size: 12px; color: #888; font-weight: normal; }
 
     .urgent-badge {
       background: #e63946; color: #fff;
@@ -168,8 +192,10 @@
       margin-left: 8px;
       display: none; 
     }
-    .urgent-active { display: inline-block; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    .urgent-active { display: inline-block;
+    animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7;
+    } 100% { opacity: 1; } }
 
     .nav-btn {
       background: transparent;
@@ -181,7 +207,8 @@
     }
     .nav-btn:active { background: rgba(0, 191, 255, 0.2); }
 
-    .card-body { padding: 15px; }
+    .card-body { padding: 15px;
+    }
     
     .station-name {
       font-size: 15px; font-weight: bold;
@@ -194,7 +221,8 @@
       display: flex; gap: 10px; margin-bottom: 12px;
       align-items: baseline;
     }
-    .plate { color: #ddd; font-weight: bold; }
+    .plate { color: #ddd; font-weight: bold;
+    }
 
     .time-info {
       font-size: 12px; color: #888;
@@ -202,16 +230,20 @@
       border-radius: 6px;
       display: flex; align-items: center; gap: 6px;
     }
-    .time-val { color: #fff; font-weight: bold; font-size: 14px; }
+    .time-val { color: #fff; font-weight: bold; font-size: 14px;
+    }
     
-    .error-text { color: #ff3399; font-weight: bold; }
+    .error-text { color: #ff3399; font-weight: bold;
+    }
     
     /* トースト通知 */
     #toast {
-      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+      position: fixed;
+      top: 70px; left: 50%; transform: translateX(-50%);
       background: rgba(0, 153, 255, 0.9); color: white;
       padding: 10px 20px; border-radius: 30px;
-      font-size: 12px; font-weight: bold;
+      font-size: 12px;
+      font-weight: bold;
       box-shadow: 0 5px 15px rgba(0,0,0,0.5);
       opacity: 0; pointer-events: none; transition: opacity 0.3s;
       z-index: 200; white-space: nowrap;
@@ -233,6 +265,7 @@
     <div class="area-tabs">
       <button class="tab-btn" data-area="tama" onclick="switchArea('tama')">多摩</button>
       <button class="tab-btn" data-area="kanagawa" onclick="switchArea('kanagawa')">神奈川</button>
+ 
     </div>
   </div>
 
@@ -253,7 +286,6 @@
   <script>
     // URL設定済み
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
-    
     let currentArea = 'tama'; 
     let pollInterval = null;
     let updateClickTime = 0;
@@ -270,7 +302,6 @@
 
     function switchArea(area) {
       currentArea = area;
-      
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.area === area) {
@@ -306,7 +337,6 @@
       updateClickTime = Date.now(); // ボタンを押した時刻を記録
 
       const targetUrl = `${GAS_API_URL}?action=update&area=${currentArea}`;
-
       fetch(targetUrl)
         .then(response => response.json())
         .then(data => {
@@ -315,6 +345,7 @@
             // ポーリング開始（30秒おき）
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(checkStatus, 30000); 
+         
           } else {
             showToast(`⚠️ エラー: ${data.error || "不明"}`);
             resetUpdateBtn();
@@ -329,7 +360,6 @@
     // ★更新完了チェック（ポーリング）
     function checkStatus() {
       const targetUrl = `${GAS_API_URL}?action=status`;
-      
       fetch(targetUrl)
         .then(response => response.json())
         .then(data => {
@@ -338,6 +368,7 @@
             // サーバーのファイルの更新時刻が、ボタンを押した時刻より新しければ完了とみなす
             if (serverTime > updateClickTime) {
               finishUpdate(serverTime);
+      
             }
           }
         })
@@ -347,7 +378,6 @@
     function finishUpdate(timestamp) {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = null;
-
       const btn = document.getElementById('update-btn');
       const timeLabel = document.getElementById('last-update-time');
       
@@ -359,7 +389,6 @@
       btn.disabled = false;
       timeLabel.textContent = `✅ 最終更新 ${h}:${m}`;
       timeLabel.style.color = "#00bfff";
-
       showToast("✅ データ更新が完了しました");
       
       // 自動でリスト更新（スキャン）
@@ -404,7 +433,6 @@
       msg.className = ""; 
       msg.textContent = "GPS信号を受信しています...";
       list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
-      
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
@@ -416,6 +444,7 @@
           // APIへのアクセス (fetch)
           const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
 
+     
           fetch(targetUrl)
             .then(response => response.json())
             .then(data => {
@@ -423,6 +452,7 @@
                 handleServerError(data.error, originalText);
               } else {
                 renderResults(data, originalText);
+  
               }
             })
             .catch(err => {
@@ -431,6 +461,7 @@
         },
         (err) => {
           let errorText = "GPSエラー: ";
+   
           switch(err.code) {
             case 1: errorText += "許可されていません"; break;
             case 2: errorText += "位置を特定できません"; break;
@@ -451,11 +482,10 @@
 
       list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
       const alertBox = document.getElementById('missing-alert-box');
-      
       if (data.missing && data.missing.length > 0) {
         alertBox.style.display = "block";
         alertBox.innerHTML = '<div class="missing-title">⚠️ 表示できない車両</div>' +
-                             data.missing.join('<br>'); 
+                             data.missing.join('<br>');
       }
 
       if (!data.items || data.items.length === 0) {
@@ -481,11 +511,25 @@
         }
         const timeColor = item.isUrgent ? "#ff4444" : "#00bfff";
 
+        // 所要時間の計算と色の分岐
+        const durationMin = Math.round(item.duration / 60);
+        let durationColor = "#ff4444"; // 11分以上（赤）
+        if (durationMin <= 5) {
+          durationColor = "#00cc66"; // 5分以内（緑）
+        } else if (durationMin <= 10) {
+          durationColor = "#FFD700"; // 6〜10分（黄）
+        }
+
         const html = `
           <div class="card">
             <div class="card-header">
-              <div class="dist-badge" style="${distStyle}">
-                ${distDisplay} <span class="dist-unit">${unitDisplay}</span>
+              <div style="display: flex; align-items: center;">
+                <div class="dist-badge" style="${distStyle}">
+                  ${distDisplay} <span class="dist-unit">${unitDisplay}</span>
+                </div>
+                <div class="duration-badge" style="color: ${durationColor};">
+                  ${durationMin} <span class="time-unit">min</span>
+                </div>
                 <span class="urgent-badge ${urgentClass}">1-3h</span>
               </div>
               <a href="${mapUrl}" target="_blank" class="nav-btn">NAV ↗</a>
