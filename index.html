@@ -1,294 +1,14 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>JKS Field</title>
-  <style>
-    /* Reset & Base */
-    body {
-      background-color: #000000;
-      color: #e0e0e0;
-      font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-      margin: 0; padding: 0;
-      padding-bottom: 60px;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* Header */
-    .header {
-      background: rgba(20, 20, 20, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 12px 15px;
-      position: sticky; top: 0; z-index: 100;
-      border-bottom: 1px solid #333;
-    }
-    .header-top {
-      display: flex; justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-    .logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; padding-top: 6px;
-    }
-    .badge { background: #0066cc; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px; vertical-align: middle;
-    margin-left: 5px; }
-
-    /* ★更新ボタンエリア（デザイン調整） */
-    .update-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .update-btn {
-      background: #e63946;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 16px; 
-      font-size: 13px; 
-      font-weight: bold;
-      cursor: pointer;
-      display: flex; align-items: center; gap: 5px;
-      transition: background 0.3s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-    .update-btn:active { opacity: 0.8; transform: translateY(1px); }
-    .update-btn:disabled { background: #555; color: #aaa;
-    cursor: wait; transform: none; box-shadow: none;}
-    
-    /* 最終更新時刻のスタイル（サイズアップ） */
-    #last-update-time {
-      font-size: 12px;
-      color: #aaa;
-      margin-top: 5px;
-      font-weight: bold;
-      height: 14px; 
-    }
-
-    /* Area Tabs */
-    .area-tabs {
-      display: flex;
-      gap: 10px;
-      background: #111;
-      padding: 4px; border-radius: 8px;
-    }
-    .tab-btn {
-      flex: 1;
-      border: none;
-      background: transparent;
-      color: #666;
-      padding: 8px 0;
-      font-size: 14px; font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: #333;
-      color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    }
-    .tab-btn.active[data-area="tama"] { border-bottom: 2px solid #00bfff; color: #00bfff;
-    }
-    .tab-btn.active[data-area="kanagawa"] { border-bottom: 2px solid #ff9900; color: #ff9900;
-    }
-
-    /* Scan Area */
-    .scan-area {
-      padding: 20px;
-      text-align: center;
-      background: #050505; border-bottom: 1px solid #222;
-    }
-    
-    #scan-btn {
-      background: linear-gradient(135deg, #444, #666);
-      color: white; border: none;
-      padding: 14px 40px; border-radius: 50px;
-      font-size: 18px; font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0, 0.4);
-      width: 100%; max-width: 300px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform 0.1s, background 0.3s;
-    }
-    #scan-btn.ready-tama { background: linear-gradient(135deg, #00bfff, #0077ff); box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4);
-    }
-    #scan-btn.ready-kanagawa { background: linear-gradient(135deg, #ff9900, #ff5500); box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
-    }
-    
-    #scan-btn:active { transform: scale(0.96);
-    }
-    
-    #status-msg { margin-top: 10px; font-size: 12px; color: #666; height: 1.2em;
-    }
-
-    /* List Area */
-    .list-container { padding: 15px; max-width: 600px; margin: 0 auto;
-    }
-    
-    .empty-state { text-align: center; color: #444; margin-top: 50px; font-size: 14px;
-    }
-
-    /* Alert Box */
-    .missing-alert {
-      background: #331111;
-      border: 1px solid #e63946;
-      color: #ffcccc;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      font-size: 12px;
-      display: none; 
-      line-height: 1.5;
-    }
-    .missing-title { font-weight: bold; color: #ff6666; margin-bottom: 4px;
-    }
-
-    /* Card Design */
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      overflow: hidden;
-      animation: fadeIn 0.3s ease-out;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0);
-    } }
-
-    .card-header {
-      background: #252525;
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between; align-items: center;
-      border-bottom: 1px solid #333;
-    }
-    
-    .dist-badge {
-      font-weight: bold;
-      font-size: 16px; color: #fff;
-      display: flex; align-items: center; gap: 5px;
-    }
-    .dist-unit { font-size: 12px; color: #888;
-    font-weight: normal; }
-
-    /* 追加：所要時間バッジ */
-    .duration-badge {
-      font-weight: bold;
-      font-size: 16px;
-      display: flex; align-items: center; gap: 3px;
-      margin-left: 10px;
-    }
-    .time-unit { font-size: 12px; color: #888; font-weight: normal; }
-
-    .urgent-badge {
-      background: #e63946; color: #fff;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 2px 6px; border-radius: 4px;
-      margin-left: 8px;
-      display: none; 
-    }
-    .urgent-active { display: inline-block;
-    animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7;
-    } 100% { opacity: 1; } }
-
-    .nav-btn {
-      background: transparent;
-      color: #00bfff;
-      border: 1px solid #00bfff;
-      padding: 5px 12px; border-radius: 20px;
-      font-size: 12px; font-weight: bold;
-      text-decoration: none;
-    }
-    .nav-btn:active { background: rgba(0, 191, 255, 0.2); }
-
-    .card-body { padding: 15px;
-    }
-    
-    .station-name {
-      font-size: 15px; font-weight: bold;
-      color: #fff;
-      margin-bottom: 6px; line-height: 1.4;
-    }
-    .car-info {
-      font-size: 15px;
-      color: #aaa;
-      display: flex; gap: 10px; margin-bottom: 12px;
-      align-items: baseline;
-    }
-    .plate { color: #ddd; font-weight: bold;
-    }
-
-    .time-info {
-      font-size: 12px; color: #888;
-      background: #111; padding: 8px;
-      border-radius: 6px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .time-val { color: #fff; font-weight: bold; font-size: 14px;
-    }
-    
-    .error-text { color: #ff3399; font-weight: bold;
-    }
-    
-    /* トースト通知 */
-    #toast {
-      position: fixed;
-      top: 70px; left: 50%; transform: translateX(-50%);
-      background: rgba(0, 153, 255, 0.9); color: white;
-      padding: 10px 20px; border-radius: 30px;
-      font-size: 12px;
-      font-weight: bold;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-      z-index: 200; white-space: nowrap;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="header">
-    <div class="header-top">
-      <div class="logo">JKS <span class="badge" id="area-badge">FIELD</span></div>
-      <div class="update-wrapper">
-        <button class="update-btn" id="update-btn" onclick="triggerUpdate()">
-          ↻ データ更新
-        </button>
-        <div id="last-update-time"></div>
-      </div>
-    </div>
-    <div class="area-tabs">
-      <button class="tab-btn" data-area="tama" onclick="switchArea('tama')">多摩</button>
-      <button class="tab-btn" data-area="kanagawa" onclick="switchArea('kanagawa')">神奈川</button>
- 
-    </div>
-  </div>
-
-  <div class="scan-area">
-    <button id="scan-btn" type="button" onclick="startScan()">エリアを選択</button>
-    <div id="status-msg">GPS情報を取得して検索します</div>
-  </div>
-
-  <div id="result-list" class="list-container">
-    <div id="missing-alert-box" class="missing-alert"></div>
-    <div class="empty-state">
-      エリアを選んで<br>ボタンを押してください
-    </div>
-  </div>
-
-  <div id="toast">更新を開始しました</div>
-
-  <script>
+<script>
     // URL設定済み
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
     let currentArea = 'tama'; 
     let pollInterval = null;
     let updateClickTime = 0;
+
+    // --- ★追加：ランダムな整理券番号（ID）を生成する関数 ---
+    function generateRequestId() {
+      return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    }
 
     window.onload = function() {
       // 1. URLの記憶
@@ -308,7 +28,6 @@
           btn.classList.add('active');
         }
       });
-
       const btn = document.getElementById('scan-btn');
       btn.className = ''; 
       if (area === 'tama') {
@@ -322,7 +41,7 @@
       localStorage.setItem('jks_area_mode', area);
     }
 
-    // ★更新機能トリガー
+    // ★更新機能トリガー (POST通信 ＆ リトライ処理)
     function triggerUpdate() {
       const btn = document.getElementById('update-btn');
       const timeLabel = document.getElementById('last-update-time');
@@ -336,8 +55,22 @@
       
       updateClickTime = Date.now(); // ボタンを押した時刻を記録
 
-      const targetUrl = `${GAS_API_URL}?action=update&area=${currentArea}`;
-      fetch(targetUrl)
+      // POST送信用のデータを作成（整理券番号を付与）
+      const payload = {
+        action: "update",
+        area: currentArea,
+        requestId: generateRequestId()
+      };
+
+      // リトライ用の関数を定義
+      const sendPostRequest = (retryCount = 0) => {
+        fetch(GAS_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain", // GASのdoPostで受け取りやすい形式
+          },
+          body: JSON.stringify(payload)
+        })
         .then(response => response.json())
         .then(data => {
           if (data.result === "OK") {
@@ -345,231 +78,26 @@
             // ポーリング開始（30秒おき）
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(checkStatus, 30000); 
-         
           } else {
             showToast(`⚠️ エラー: ${data.error || "不明"}`);
             resetUpdateBtn();
           }
         })
         .catch(err => {
-          showToast("❌ 通信エラー");
-          resetUpdateBtn();
+          // 通信エラー時、最大2回まで再送（リトライ）
+          if (retryCount < 2) {
+            console.log(`通信エラー、リトライします (${retryCount + 1}/2)`);
+            setTimeout(() => sendPostRequest(retryCount + 1), 2000); // 2秒後に再送
+          } else {
+            showToast("❌ 通信エラー（再送失敗）");
+            resetUpdateBtn();
+          }
         });
+      };
+
+      // 初回のリクエストを送信
+      sendPostRequest();
     }
 
-    // ★更新完了チェック（ポーリング）
+    // ★更新完了チェック（ポーリング） ※これ以降は既存のコードのまま
     function checkStatus() {
-      const targetUrl = `${GAS_API_URL}?action=status`;
-      fetch(targetUrl)
-        .then(response => response.json())
-        .then(data => {
-          if (data.result === "OK" && data.timestamp) {
-            const serverTime = parseInt(data.timestamp);
-            // サーバーのファイルの更新時刻が、ボタンを押した時刻より新しければ完了とみなす
-            if (serverTime > updateClickTime) {
-              finishUpdate(serverTime);
-      
-            }
-          }
-        })
-        .catch(err => console.log("Status check failed"));
-    }
-
-    function finishUpdate(timestamp) {
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = null;
-      const btn = document.getElementById('update-btn');
-      const timeLabel = document.getElementById('last-update-time');
-      
-      const date = new Date(timestamp);
-      const h = String(date.getHours()).padStart(2, '0');
-      const m = String(date.getMinutes()).padStart(2, '0');
-
-      btn.textContent = "↻ データ更新";
-      btn.disabled = false;
-      timeLabel.textContent = `✅ 最終更新 ${h}:${m}`;
-      timeLabel.style.color = "#00bfff";
-      showToast("✅ データ更新が完了しました");
-      
-      // 自動でリスト更新（スキャン）
-      startScan();
-    }
-
-    function resetUpdateBtn() {
-      const btn = document.getElementById('update-btn');
-      const timeLabel = document.getElementById('last-update-time');
-      btn.textContent = "↻ データ更新";
-      btn.disabled = false;
-      timeLabel.textContent = "";
-      if (pollInterval) clearInterval(pollInterval);
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.opacity = "1";
-      setTimeout(() => { t.style.opacity = "0"; }, 3000);
-    }
-
-    function startScan() {
-      const btn = document.getElementById('scan-btn');
-      const msg = document.getElementById('status-msg');
-      const list = document.getElementById('result-list');
-
-      if (!GAS_API_URL.startsWith("http")) {
-        showError("コード内のGAS_API_URLを設定してください");
-        return;
-      }
-
-      if (!navigator.geolocation) {
-        showError("GPSがサポートされていません");
-        return;
-      }
-
-      btn.disabled = true;
-      const originalText = btn.textContent;
-      btn.textContent = "位置特定中...";
-      btn.style.opacity = "0.7";
-      msg.className = ""; 
-      msg.textContent = "GPS信号を受信しています...";
-      list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          
-          btn.textContent = "通信中...";
-          msg.textContent = `API照会中...`;
-
-          // APIへのアクセス (fetch)
-          const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
-
-     
-          fetch(targetUrl)
-            .then(response => response.json())
-            .then(data => {
-              if(data.error) {
-                handleServerError(data.error, originalText);
-              } else {
-                renderResults(data, originalText);
-  
-              }
-            })
-            .catch(err => {
-              handleServerError(err.message, originalText);
-            });
-        },
-        (err) => {
-          let errorText = "GPSエラー: ";
-   
-          switch(err.code) {
-            case 1: errorText += "許可されていません"; break;
-            case 2: errorText += "位置を特定できません"; break;
-            case 3: errorText += "タイムアウト"; break;
-            default: errorText += err.message;
-          }
-          showError(errorText);
-          resetBtn(originalText);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    }
-
-    function renderResults(data, originalText) {
-      const list = document.getElementById('result-list');
-      const msg = document.getElementById('status-msg');
-      resetBtn(originalText);
-
-      list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
-      const alertBox = document.getElementById('missing-alert-box');
-      if (data.missing && data.missing.length > 0) {
-        alertBox.style.display = "block";
-        alertBox.innerHTML = '<div class="missing-title">⚠️ 表示できない車両</div>' +
-                             data.missing.join('<br>');
-      }
-
-      if (!data.items || data.items.length === 0) {
-        list.insertAdjacentHTML('beforeend', '<div class="empty-state">このエリアに<br>作業可能な車両はありません</div>');
-        msg.textContent = "検索完了: 0件";
-        return;
-      }
-
-      data.items.forEach(item => {
-        const urgentClass = item.isUrgent ? "urgent-active" : "";
-        const mapUrl = "http://maps.google.com/maps?q=" + item.lat + "," + item.lng;
-        
-        let distDisplay = item.distance;
-        let unitDisplay = "m";
-        if (item.distance >= 1000) {
-          distDisplay = (item.distance / 1000).toFixed(1); 
-          unitDisplay = "km";
-        }
-
-        let distStyle = "";
-        if (item.isUrgent && item.distance < 1000) {
-          distStyle = "color: #FFD700;";
-        }
-        const timeColor = item.isUrgent ? "#ff4444" : "#00bfff";
-
-        // 所要時間の計算と色の分岐
-        const durationMin = Math.round(item.duration / 60);
-        let durationColor = "#ff4444"; // 11分以上（赤）
-        if (durationMin <= 5) {
-          durationColor = "#00cc66"; // 5分以内（緑）
-        } else if (durationMin <= 10) {
-          durationColor = "#FFD700"; // 6〜10分（黄）
-        }
-
-        const html = `
-          <div class="card">
-            <div class="card-header">
-              <div style="display: flex; align-items: center;">
-                <div class="dist-badge" style="${distStyle}">
-                  ${distDisplay} <span class="dist-unit">${unitDisplay}</span>
-                </div>
-                <div class="duration-badge" style="color: ${durationColor};">
-                  ${durationMin} <span class="time-unit">min</span>
-                </div>
-                <span class="urgent-badge ${urgentClass}">1-3h</span>
-              </div>
-              <a href="${mapUrl}" target="_blank" class="nav-btn">NAV ↗</a>
-            </div>
-            <div class="card-body">
-              <div class="station-name">${item.station}</div>
-              <div class="car-info">
-                <span class="plate">${item.plate}</span>
-                <span>/ ${item.model}</span>
-              </div>
-              <div class="time-info">
-                <span>残り空き時間:</span>
-                <span class="time-val" style="color:${timeColor}">${item.availableHours}h</span>
-              </div>
-            </div>
-          </div>
-        `;
-        list.insertAdjacentHTML('beforeend', html);
-      });
-
-      msg.textContent = `検索完了: ${data.items.length}件を表示`;
-    }
-
-    function handleServerError(msgText, originalText) {
-      showError("通信エラー: " + msgText);
-      resetBtn(originalText);
-    }
-
-    function showError(text) {
-      const msg = document.getElementById('status-msg');
-      msg.textContent = text;
-      msg.className = "error-text";
-    }
-
-    function resetBtn(text) {
-      const btn = document.getElementById('scan-btn');
-      btn.disabled = false;
-      btn.textContent = text || "📡 周辺スキャン";
-      btn.style.opacity = "1";
-    }
-  </script>
-</body>
-</html>
