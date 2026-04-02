@@ -5,6 +5,7 @@ let currentArea = 'tama';
 let currentMode = 'normal';
 let pollInterval = null;
 let updateClickTime = 0;
+let cachedLocation = null; // スキャン用キャッシュGPS保持変数
 
 function generateRequestId() {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -66,6 +67,18 @@ function triggerUpdate() {
   btn.textContent = "更新確認中...";
   timeLabel.textContent = "起動中...";
   updateClickTime = Date.now(); 
+
+  // ★ バックグラウンドでGPS情報を取得・保持しておく
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        console.log("GPSキャッシュ保存完了");
+      },
+      (err) => { console.log("バックグラウンドGPS取得エラー:", err); },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
 
   const payload = { action: "update", area: currentArea, requestId: generateRequestId() };
 
@@ -131,7 +144,7 @@ function finishUpdate(timestamp) {
   timeLabel.style.color = "#00bfff";
   showToast("✅ データ更新が完了しました");
   
-  startScan();
+  // スキャンは自動で発火させず、現場のタイミングでボタンを押してもらう運用
 }
 
 function resetUpdateBtn() {
@@ -166,51 +179,68 @@ function startScan() {
 
   btn.disabled = true;
   const originalText = btn.textContent;
-  btn.textContent = "位置特定中...";
-  btn.style.opacity = "0.7";
-  msg.className = ""; 
-  msg.textContent = "GPS信号を受信しています...";
+  
   list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      
-      btn.textContent = "通信中...";
-      msg.textContent = `API照会中...`;
+  // ★ GPSキャッシュがあれば使い、なければ取得する
+  if (cachedLocation) {
+    btn.textContent = "通信中(GPSキャッシュ利用)...";
+    msg.className = ""; 
+    msg.textContent = `API照会中...`;
+    
+    const lat = cachedLocation.lat;
+    const lng = cachedLocation.lng;
+    
+    // 一度使ったキャッシュは破棄し、移動後の誤爆を防ぐ
+    cachedLocation = null; 
+    executeScanApi(lat, lng, originalText);
+  } else {
+    btn.textContent = "位置特定中...";
+    btn.style.opacity = "0.7";
+    msg.className = ""; 
+    msg.textContent = "GPS信号を受信しています...";
 
-      const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        btn.textContent = "通信中...";
+        msg.textContent = `API照会中...`;
+        executeScanApi(pos.coords.latitude, pos.coords.longitude, originalText);
+      },
+      (err) => {
+        let errorText = "GPSエラー: ";
+        switch(err.code) {
+          case 1: errorText += "許可されていません"; break;
+          case 2: errorText += "位置を特定できません"; break;
+          case 3: errorText += "タイムアウト"; break;
+          default: errorText += err.message;
+        }
+        showError(errorText);
+        resetBtn(originalText);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+}
 
-      fetch(targetUrl)
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-          return response.json();
-        })
-        .then(data => {
-          if(data.error) {
-            handleServerError(data.error, originalText);
-          } else {
-            renderResults(data, originalText);
-          }
-        })
-        .catch(err => {
-          handleServerError(err.message, originalText);
-        });
-    },
-    (err) => {
-      let errorText = "GPSエラー: ";
-      switch(err.code) {
-        case 1: errorText += "許可されていません"; break;
-        case 2: errorText += "位置を特定できません"; break;
-        case 3: errorText += "タイムアウト"; break;
-        default: errorText += err.message;
+// 通信処理を切り出し
+function executeScanApi(lat, lng, originalText) {
+  const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
+
+  fetch(targetUrl)
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      if(data.error) {
+        handleServerError(data.error, originalText);
+      } else {
+        renderResults(data, originalText);
       }
-      showError(errorText);
-      resetBtn(originalText);
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+    })
+    .catch(err => {
+      handleServerError(err.message, originalText);
+    });
 }
 
 function renderResults(data, originalText) {
@@ -233,44 +263,65 @@ function renderResults(data, originalText) {
     return;
   }
 
-  // 表示アイテムの選定
   let displayItems = [];
 
   if (currentMode === 'cluster') {
-    // ステーション単位でグループ化
     const groups = new Map();
     data.items.forEach(item => {
       if (!groups.has(item.station)) groups.set(item.station, []);
       groups.get(item.station).push(item);
     });
 
-    // 上位5ステーションを抽出
-    const stations = Array.from(groups.values()).slice(0, 5);
+    const stations = Array.from(groups.values());
     
     stations.forEach(group => {
-      // 優先度の高い車両（または先頭の車両）を代表として扱う
       const rep = group.find(c => c.isUrgent) || group[0];
       const activeCount = group.length;
       const total = rep.stationTotal || activeCount;
       const checked = rep.stationChecked || 0;
       const remaining = total - checked;
 
-      rep.clusterInfo = {
-        activeCount: activeCount,
-        total: total,
-        remaining: remaining
-      };
-      displayItems.push(rep);
+      // ★ 厳格な完遂表示ロジック ★
+      let shouldShow = false;
+      
+      if (remaining === 1 && activeCount >= 1) {
+        shouldShow = true;
+      } else if (remaining === 2 && activeCount >= 2) {
+        shouldShow = true;
+      } else if (remaining === 3 && activeCount >= 3) {
+        shouldShow = true;
+      } else if (total >= 4 && remaining >= 4 && activeCount >= 2) {
+        // マンモス特例: 全4台以上、残4台以上で、2台以上空いていれば表示
+        shouldShow = true;
+      }
+
+      if (shouldShow) {
+        rep.clusterInfo = {
+          activeCount: activeCount,
+          total: total,
+          remaining: remaining
+        };
+        displayItems.push(rep);
+      }
     });
-    msg.textContent = `検索完了: 上位 ${displayItems.length} ステーションを表示 (Cluster)`;
+    
+    // 表示条件をクリアしたステーションの上位5件を表示
+    displayItems = displayItems.slice(0, 5);
+    
+    if (displayItems.length === 0) {
+      list.insertAdjacentHTML('beforeend', '<div class="empty-state">完遂条件を満たすステーションが<br>見つかりません</div>');
+      msg.textContent = "検索完了: 対象なし";
+      return;
+    }
+    
+    msg.textContent = `検索完了: 完遂可能 ${displayItems.length} ステーション`;
 
   } else {
-    // Normal Mode: そのまま上位8件まで表示
+    // Normal Mode: フィルタリングせず上位8件
     displayItems = data.items.slice(0, 8);
     msg.textContent = `検索完了: ${displayItems.length}件を表示 (Normal)`;
   }
 
-  // HTMLのレンダリング
   displayItems.forEach(item => {
     const urgentClass = item.isUrgent ? "urgent-active" : "";
     const mapUrl = "http://maps.google.com/maps?q=" + item.lat + "," + item.lng;
@@ -290,7 +341,6 @@ function renderResults(data, originalText) {
     if (durationMin <= 5) durationColor = "#00cc66"; 
     else if (durationMin <= 10) durationColor = "#FFD700"; 
 
-    // Cluster Badgeの生成
     let clusterBadgeHtml = "";
     if (currentMode === 'cluster' && item.clusterInfo) {
       const info = item.clusterInfo;
