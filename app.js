@@ -1,11 +1,10 @@
-// GASデプロイ後のURLをここに設定してください
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
 
 let currentArea = 'tama'; 
 let currentMode = 'normal';
 let pollInterval = null;
 let updateClickTime = 0;
-let cachedLocation = null; // スキャン用キャッシュGPS保持変数
+let cachedLocation = null; 
 
 function generateRequestId() {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -68,7 +67,6 @@ function triggerUpdate() {
   timeLabel.textContent = "起動中...";
   updateClickTime = Date.now(); 
 
-  // ★ バックグラウンドでGPS情報を取得・保持しておく
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -143,8 +141,6 @@ function finishUpdate(timestamp) {
   timeLabel.textContent = `✅ 最終更新 ${h}:${m}`;
   timeLabel.style.color = "#00bfff";
   showToast("✅ データ更新が完了しました");
-  
-  // スキャンは自動で発火させず、現場のタイミングでボタンを押してもらう運用
 }
 
 function resetUpdateBtn() {
@@ -182,7 +178,6 @@ function startScan() {
   
   list.innerHTML = '<div id="missing-alert-box" class="missing-alert"></div>';
 
-  // ★ GPSキャッシュがあれば使い、なければ取得する
   if (cachedLocation) {
     btn.textContent = "通信中(GPSキャッシュ利用)...";
     msg.className = ""; 
@@ -191,7 +186,6 @@ function startScan() {
     const lat = cachedLocation.lat;
     const lng = cachedLocation.lng;
     
-    // 一度使ったキャッシュは破棄し、移動後の誤爆を防ぐ
     cachedLocation = null; 
     executeScanApi(lat, lng, originalText);
   } else {
@@ -222,7 +216,6 @@ function startScan() {
   }
 }
 
-// 通信処理を切り出し
 function executeScanApi(lat, lng, originalText) {
   const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
 
@@ -293,6 +286,12 @@ function renderResults(data, originalText) {
       } else if (total >= 4 && remaining >= 4 && activeCount >= 2) {
         // マンモス特例: 全4台以上、残4台以上で、2台以上空いていれば表示
         shouldShow = true;
+        
+        // ★追加: 1台残し（端数）の完全禁止フィルター
+        // 作業後に「残り1台」になってしまう場合は、特例であっても強制的に非表示にする
+        if ((remaining - activeCount) === 1) {
+          shouldShow = false;
+        }
       }
 
       if (shouldShow) {
@@ -305,7 +304,6 @@ function renderResults(data, originalText) {
       }
     });
     
-    // 表示条件をクリアしたステーションの上位5件を表示
     displayItems = displayItems.slice(0, 5);
     
     if (displayItems.length === 0) {
@@ -317,7 +315,7 @@ function renderResults(data, originalText) {
     msg.textContent = `検索完了: 完遂可能 ${displayItems.length} ステーション`;
 
   } else {
-    // Normal Mode: フィルタリングせず上位8件
+    // Normal Mode
     displayItems = data.items.slice(0, 8);
     msg.textContent = `検索完了: ${displayItems.length}件を表示 (Normal)`;
   }
