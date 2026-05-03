@@ -12,7 +12,7 @@ function generateRequestId() {
 
 window.onload = function() {
   const savedArea = localStorage.getItem('jks_area_mode');
-  if (savedArea && (savedArea === 'tama' || savedArea === 'kanagawa')) {
+  if (savedArea && (savedArea === 'tama' || savedArea === 'fuchu' || savedArea === 'kanagawa')) {
     switchArea(savedArea);
   } else {
     switchArea('tama'); 
@@ -38,11 +38,16 @@ function switchArea(area) {
   if (area === 'tama') {
     btn.classList.add('ready-tama');
     btn.textContent = "📡 多摩をスキャン";
+    document.getElementById('area-badge').textContent = 'TAMA';
+  } else if (area === 'fuchu') {
+    btn.classList.add('ready-fuchu');
+    btn.textContent = "📡 府中をスキャン";
+    document.getElementById('area-badge').textContent = 'FCHU';
   } else {
     btn.classList.add('ready-kanagawa');
     btn.textContent = "📡 神奈川をスキャン";
+    document.getElementById('area-badge').textContent = 'KNGW';
   }
-  document.getElementById('area-badge').textContent = (area === 'tama') ? 'TAMA' : 'KNGW';
   localStorage.setItem('jks_area_mode', area);
 }
 
@@ -59,7 +64,9 @@ function triggerUpdate() {
   const btn = document.getElementById('update-btn');
   const timeLabel = document.getElementById('last-update-time');
   
-  const areaLabel = (currentArea === 'tama') ? "多摩エリア" : "神奈川エリア";
+  let areaLabel = "神奈川エリア";
+  if (currentArea === 'tama') areaLabel = "多摩エリア";
+  else if (currentArea === 'fuchu') areaLabel = "府中エリア";
   if (!confirm(`【${areaLabel}】のデータ更新を開始しますか？`)) return;
 
   btn.disabled = true;
