@@ -1,5 +1,3 @@
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
-
 let currentArea = 'tama'; 
 let currentMode = 'normal';
 let pollInterval = null;
@@ -11,6 +9,8 @@ function generateRequestId() {
 }
 
 window.onload = function() {
+  if (typeof requireUser === "function" && !requireUser("../select-user.html")) return;
+
   const savedArea = localStorage.getItem('jks_area_mode');
   if (savedArea && (savedArea === 'tama' || savedArea === 'fuchu' || savedArea === 'kanagawa')) {
     switchArea(savedArea);
@@ -88,7 +88,8 @@ function triggerUpdate() {
   const payload = { action: "update", area: currentArea, requestId: generateRequestId() };
 
   const sendPostRequest = (retryCount = 0) => {
-    fetch(GAS_API_URL, {
+    const gasUrl = getGasUrl("jksSystem");
+    fetch(gasUrl, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -119,7 +120,8 @@ function triggerUpdate() {
 }
 
 function checkStatus() {
-  const targetUrl = `${GAS_API_URL}?action=status`;
+  const gasUrl = getGasUrl("jksSystem");
+  const targetUrl = `${gasUrl}?action=status`;
   fetch(targetUrl)
     .then(response => response.json())
     .then(data => {
@@ -171,8 +173,9 @@ function startScan() {
   const msg = document.getElementById('status-msg');
   const list = document.getElementById('result-list');
 
-  if (!GAS_API_URL.startsWith("http")) {
-    showError("コード内のGAS_API_URLを設定してください");
+  const gasUrl = getGasUrl("jksSystem");
+  if (!gasUrl || !gasUrl.startsWith("http")) {
+    showError("GAS URLを取得できませんでした");
     return;
   }
   if (!navigator.geolocation) {
@@ -224,7 +227,8 @@ function startScan() {
 }
 
 function executeScanApi(lat, lng, originalText) {
-  const targetUrl = `${GAS_API_URL}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
+  const gasUrl = getGasUrl("jksSystem");
+  const targetUrl = `${gasUrl}?action=scan&lat=${lat}&lng=${lng}&area=${currentArea}`;
 
   fetch(targetUrl)
     .then(response => {
@@ -276,7 +280,7 @@ function renderResults(data, originalText) {
     
     stations.forEach(group => {
       const rep = group.find(c => c.isUrgent) || group[0];
-      const activeCount = group.length;
+      const activeCount = rep.availableCount !== undefined ? rep.availableCount : group.length;
       const total = rep.stationTotal || activeCount;
       const checked = rep.stationChecked || 0;
       const remaining = total - checked;
