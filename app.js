@@ -4,6 +4,12 @@ let pollInterval = null;
 let updateClickTime = 0;
 let cachedLocation = null; 
 
+const JKS_SYSTEM_URL = "https://script.google.com/macros/s/AKfycbywQoNFA2x7qn8cMelt_5OVPiNumBYqPbTNnK3nzXWv59q0FmP2Mt8qmVxT5Zk6wPEr/exec";
+
+function getGasUrl() {
+  return JKS_SYSTEM_URL;
+}
+
 function generateRequestId() {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 }
